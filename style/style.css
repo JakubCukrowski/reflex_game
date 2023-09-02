@@ -1,0 +1,109 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+
+/* UPPER PART */
+.basic {
+    max-width: 100%;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.container {
+    width: 80%;
+    min-height: 80vh;
+}
+
+.game__utilities {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    text-align: center;
+    padding-bottom: 40px;
+}
+
+.user__score {
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    gap: 30px;
+    flex: 1 1 0;
+    width: 0;
+}
+
+.user__score > div {
+    border: 1px solid black;
+    padding: 6px 10px;
+}
+
+h2 {
+   flex: 1 1 0;
+   width: 0;
+}
+
+.time {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 1 1 0;
+    width: 0;
+}
+
+.time > p {
+    border: 1px solid black;
+    padding: 6px 10px;
+}
+
+.box {
+    width: 120px;
+}
+
+p {
+    font-size: 22px;
+}
+
+/* GAME BOARD */
+
+.game__field {
+    width: 100%;
+    border: 1px solid black;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.game__board {
+    padding: 20px 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+    width: 460px;
+}
+
+.square__button {
+    width: 80px;
+    height: 80px;
+    border: 1px solid black;
+}
+
+.game__buttons {
+    display: flex;
+    gap: 20px;
+    padding-bottom: 20px;
+}
+
+.btn {
+    padding: 10px 30px;
+}
+
+.active {
+    background-color: green;
+}
