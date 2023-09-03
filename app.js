@@ -36,14 +36,16 @@ const handleSquares = (event) => {
         event.target.classList.add('clicked')
         //prevent multiple points gathering on one colored square
         event.target.removeEventListener('click', handleSquares)
-    } else if (event.target.classList.contains('active') && !(event.target.classList.contains('life'))) {
+
+    }  else if (event.target.classList.contains('life')) {
+        lives++
+        livesSpan.innerText = lives
+        event.target.classList.remove('life')
+    } else  {
         //subtract life when clicked square was not colored
         lives--
         livesSpan.innerText = lives
         event.target.classList.add('error')
-    } else if (event.target.classList.contains('life')) {
-        lives++
-        livesSpan.innerText = lives
     }
 }
 
@@ -90,6 +92,7 @@ const extraLifeSquare = () => {
 
         const clearLife = setTimeout(() => {
             filterActiveSquares.forEach(square => square.classList.remove('life'))
+            clearTimeout(clearLife)
         }, 1000);
     }
 }
