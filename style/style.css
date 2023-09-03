@@ -113,3 +113,22 @@ p {
     box-shadow: 0 0 14px rgb(2, 91, 2);
     border: none;
 }
+
+@keyframes horizontal-shaking {
+    0% { transform: translateX(0) }
+    25% { transform: translateX(5px) }
+    50% { transform: translateX(-5px) }
+    75% { transform: translateX(5px) }
+    100% { transform: translateX(0) }
+}
+
+.error {
+    border-color: red;
+    background-color: red;
+    animation: horizontal-shaking 0.3s;
+}
+
+.life {
+    background-image: url(https://upload.wikimedia.org/wikipedia/commons/thumb/f/f1/Heart_coraz%C3%B3n.svg/1024px-Heart_coraz%C3%B3n.svg.png);
+    background-size: 100%;
+}
