@@ -1,13 +1,7 @@
-// game utils
-const GAME_DURATION = 60; //in seconds
-const TIME_TO_COLOR_THE_SQUARE = 3; //in seconds
-const TIME_THE_SQUARE_IS_COLORED = 2; //in seconds
-let lives = 3;
-let points = 0;
-let counter = GAME_DURATION;
-
 //start the game button element
 const startButton = document.querySelector('.start__btn');
+//reset button
+const resetButton = document.querySelector('.reset__btn')
 //time element handled by start button
 const time = document.querySelector('.timeframe');
 //array of squares
@@ -16,19 +10,21 @@ const squares = Array.from(document.querySelectorAll('.square__button'));
 const pointsSpan = document.querySelector('.points__amount');
 //lives element
 const livesSpan = document.querySelector('.life__amount')
-
-//color random square 
-const randomSquareGenerator = () => {
-    const randomSquare = Math.floor(Math.random() * (squares.length));
-    squares[randomSquare].classList.add('active');
-
-    //timeout to remove the color from square
-    const removeColorFromSquare = setTimeout(() => {
-        squares.forEach(square => square.classList.remove('active'));
-    }, TIME_THE_SQUARE_IS_COLORED * 1000);
-}
-
 //handle points
+
+// game utils
+const GAME_DURATION = 60; //in seconds
+const TIME_TO_COLOR_THE_SQUARE = 3; //in seconds
+const TIME_THE_SQUARE_IS_COLORED = 2; //in seconds
+let lives = 3;
+let points = 0;
+let timer = GAME_DURATION;
+let gameActive = false;
+
+//intervals
+let startGameInterval;
+let colorRandomSquareInterval;
+let removeColorFromSquareTimeout;
 
 const handleSquares = (event) => {
     //check if square is colored
@@ -44,39 +40,71 @@ const handleSquares = (event) => {
     }
 }
 
+const randomSquareColored = () => {
+    const randomSquare = Math.floor(Math.random() * (squares.length));
+    squares[randomSquare].classList.add('active');
+
+    //timeout to remove the color from square
+    removeColorFromSquareTimeout = setTimeout(() => {
+        squares.forEach(square => square.classList.remove('active'));
+
+        if (lives === 0 || timer <= 0 || gameActive === false) {
+            clearTimeout(removeColorFromSquareTimeout)
+        }
+
+    }, TIME_THE_SQUARE_IS_COLORED * 1000);
+    squares.forEach(square => square.addEventListener('click', handleSquares));
+}
+
 //handle start the game
 const handleStart = () => {
+    gameActive = true
     startButton.setAttribute('disabled', true);
-
+    randomSquareColored()
+    
     //add event to squares
     squares.forEach(square => square.addEventListener('click', handleSquares))
-    
-    randomSquareGenerator();
 
     //interval to start the game
-    const startGame = setInterval(() => {
+    startGameInterval = setInterval(() => {      
         //handle the time
-        counter--;
-        time.innerText = counter;
+        timer--;
+        time.innerText = timer;
 
-        if (counter === 0) {
-            clearInterval(startGame)
-        };
+        if (lives === 0 || timer <= 0 || gameActive === false) {
+            clearInterval(startGameInterval)
+            clearInterval(colorRandomSquareInterval)
+        }
 
     }, 1000);
 
     //interval to light random square every TIME_TO_LIGHT_THE_SQUARE second(s)
-    const colorRandomSquare = setInterval(() => {
-        randomSquareGenerator(); 
-        squares.forEach(square => square.addEventListener('click', handleSquares))
-
-        if (counter <= 0) {
-            clearInterval(colorRandomSquare)
-        }
-
-    }, TIME_TO_COLOR_THE_SQUARE * 1000);
-
+    colorRandomSquareInterval = setInterval(() => {
+        randomSquareColored()
+    }, TIME_TO_COLOR_THE_SQUARE * 1000); 
 }
 
-// add event to the button
+//reset the game
+const resetGame = () => {
+    //set game status to false
+    gameActive = false;
+    //reset lives
+    lives = 3;
+    livesSpan.innerText = lives;
+    //reset points 
+    points = 0;
+    pointsSpan.innerText = 0;
+    //reset time
+    timer = GAME_DURATION;
+    time.innerText = timer;
+    squares.forEach(square => square.classList.remove('active'));
+    startButton.removeAttribute('disabled');
+    clearInterval(startGameInterval)
+    clearInterval(colorRandomSquareInterval)
+    clearTimeout(removeColorFromSquareTimeout)
+}
+
+// add start event to the button
 startButton.addEventListener('click', handleStart);
+//add reset event to the button
+resetButton.addEventListener('click', resetGame)
