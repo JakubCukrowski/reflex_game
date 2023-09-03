@@ -92,6 +92,7 @@ p {
     width: 80px;
     height: 80px;
     border: 1px solid black;
+    cursor: pointer;
 }
 
 .game__buttons {
@@ -106,4 +107,9 @@ p {
 
 .active {
     background-color: green;
+}
+
+.clicked {
+    box-shadow: 0 0 14px rgb(2, 91, 2);
+    border: none;
 }

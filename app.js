@@ -31,6 +31,9 @@ const handleSquares = (event) => {
     if (event.target.classList.contains('active')) {
         points++
         pointsSpan.innerText = points
+
+        //add clicked to check if square was clicked during 2 seconds
+        event.target.classList.add('clicked')
         //prevent multiple points gathering on one colored square
         event.target.removeEventListener('click', handleSquares)
     } else {
@@ -48,8 +51,19 @@ const randomSquareColored = () => {
     removeColorFromSquareTimeout = setTimeout(() => {
         squares.forEach(square => square.classList.remove('active'));
 
+        const filterClickedSquare = squares.filter(square => square.classList.contains('clicked'))
+        
+        //remove point if square was not clicked
+        if (filterClickedSquare.length === 0) {
+            lives--
+            livesSpan.innerText = lives
+        } else {
+            squares.forEach(square => square.classList.remove('clicked'));
+        }
+
         if (lives === 0 || timer <= 0 || gameActive === false) {
             clearTimeout(removeColorFromSquareTimeout)
+            resetGame()
         }
 
     }, TIME_THE_SQUARE_IS_COLORED * 1000);
@@ -74,6 +88,7 @@ const handleStart = () => {
         if (lives === 0 || timer <= 0 || gameActive === false) {
             clearInterval(startGameInterval)
             clearInterval(colorRandomSquareInterval)
+            resetGame()
         }
 
     }, 1000);
@@ -102,6 +117,7 @@ const resetGame = () => {
     clearInterval(startGameInterval)
     clearInterval(colorRandomSquareInterval)
     clearTimeout(removeColorFromSquareTimeout)
+    squares.forEach(square => square.removeEventListener('click', handleSquares))
 }
 
 // add start event to the button
