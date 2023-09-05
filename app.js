@@ -4,22 +4,25 @@ const startButton = document.querySelector('.start__btn');
 const resetButton = document.querySelector('.reset__btn')
 //time element handled by start button
 const time = document.querySelector('.timeframe');
-//array of squares
-const squares = Array.from(document.querySelectorAll('.square__button'));
 //points element
 const pointsSpan = document.querySelector('.points__amount');
 //lives element
 const livesSpan = document.querySelector('.life__amount')
-//handle points
+//game board
+const gameBoard = document.querySelector('.game__board')
+//level element
+const levelSpan = document.querySelector('.current__level')
 
 // game utils
 const GAME_DURATION = 60; //in seconds
 const TIME_TO_COLOR_THE_SQUARE = 3; //in seconds
 const TIME_THE_SQUARE_IS_COLORED = 2; //in seconds
+let GAME_LEVEL = 1;
+let squaresNumber = 36 // 25 for 1st lvl
+let squares = []
 let lives = 3;
 let points = 0;
 let timer = GAME_DURATION;
-let gameActive = false;
 let extraLifeAppeared = false
 
 //intervals
@@ -27,6 +30,20 @@ let startGameInterval;
 let colorRandomSquareInterval;
 let removeColorFromSquareTimeout;
 
+//set game board with appropriate number of squares depending on the current lvl
+const prepareGameBoard = () => {
+    for (let i = 0; i < squaresNumber; i++) {
+        const squareDiv = document.createElement('div')
+        squareDiv.classList.add('square__button')
+        squares.push(squareDiv)
+        gameBoard.append(squareDiv)
+    }
+}
+
+//first function call, next in startGame innterval below
+prepareGameBoard()
+
+//handle squares behavior
 const handleSquares = (event) => {
     //check if square is colored
     if (event.target.classList.contains('active')) {
@@ -75,11 +92,6 @@ const randomSquareColored = () => {
             squares.forEach(square => square.classList.remove('error'));
         }
 
-        if (lives === 0 || timer <= 0 || gameActive === false) {
-            clearTimeout(removeColorFromSquareTimeout)
-            resetGame()
-        }
-
     }, TIME_THE_SQUARE_IS_COLORED * 1000);
     squares.forEach(square => square.addEventListener('click', handleSquares));
 }
@@ -112,6 +124,21 @@ const utilitySquares = () => {
     }
 }
 
+//handle 0 seconds left, AKA next lvl
+const gameOver = () => {
+    //squares appended to game board element
+    const gameBoardSquares = gameBoard.querySelectorAll('.square__button')
+    
+    for (let i = 0; i < gameBoardSquares.length; i++) {
+        gameBoard.removeChild(gameBoard.lastElementChild)
+    }
+
+    squares.length = 0
+    GAME_LEVEL++;
+    levelSpan.innerText = GAME_LEVEL
+    squaresNumber += 5;
+}
+
 //handle start the game
 const handleStart = () => {
     gameActive = true
@@ -129,10 +156,29 @@ const handleStart = () => {
         time.innerText = timer;
         utilitySquares()
 
-        if (lives === 0 || timer <= 0 || gameActive === false) {
+        if (lives > 0 && timer <= 0) {
+            //60 seconds passed, we reset the gameactive state
+            gameActive = false
+            //clear both intervals
             clearInterval(startGameInterval)
             clearInterval(colorRandomSquareInterval)
+            clearTimeout(removeColorFromSquareTimeout)
+            //game ends
+            gameOver()
+            //new game board
+            prepareGameBoard()
+            startButton.removeAttribute('disabled')
+            timer = GAME_DURATION
+            time.innerText = timer
+
+        } else if (lives === 0 || timer <= 0) {
+            clearInterval(startGameInterval)
+            clearInterval(colorRandomSquareInterval)
+            clearTimeout(removeColorFromSquareTimeout)
             resetGame()
+            GAME_LEVEL = 1
+            squaresNumber = 25
+
         }
 
     }, 1000);
@@ -145,8 +191,6 @@ const handleStart = () => {
 
 //reset the game
 const resetGame = () => {
-    //set game status to false
-    gameActive = false;
     //reset lives
     lives = 3;
     livesSpan.innerText = lives;
