@@ -20,6 +20,7 @@ let lives = 3;
 let points = 0;
 let timer = GAME_DURATION;
 let gameActive = false;
+let extraLifeAppeared = false
 
 //intervals
 let startGameInterval;
@@ -29,13 +30,14 @@ let removeColorFromSquareTimeout;
 const handleSquares = (event) => {
     //check if square is colored
     if (event.target.classList.contains('active')) {
-        points++
-        pointsSpan.innerText = points
+        points++;
+        pointsSpan.innerText = points;
 
         //add clicked to check if square was clicked during 2 seconds
-        event.target.classList.add('clicked')
+        event.target.classList.add('clicked');
         //prevent multiple points gathering on one colored square
-        event.target.removeEventListener('click', handleSquares)
+        squares.filter(square => !square.classList.contains('life'))
+            .forEach(square => square.removeEventListener('click', handleSquares));
 
     }  else if (event.target.classList.contains('life')) {
         lives++
@@ -46,6 +48,9 @@ const handleSquares = (event) => {
         lives--
         livesSpan.innerText = lives
         event.target.classList.add('error')
+        //block multiple wrong squares click during one interval
+        squares.filter(square => !square.classList.contains('life'))
+            .forEach(square => square.removeEventListener('click', handleSquares));
     }
 }
 
@@ -80,20 +85,30 @@ const randomSquareColored = () => {
 }
 
 //extra life square 
-const extraLifeSquare = () => {
+const utilitySquares = () => {
     //random number to check the condition below and spawn extra life square
-    const randomNumber = Math.floor(Math.random() * (100 - 1 + 1) + 1)
-    
-    if (randomNumber === 50) {
-        const filterActiveSquares = squares.filter(square => !square.classList.contains('active'))
-        const randomSquare = Math.floor(Math.random() * filterActiveSquares.length)
+    const randomNumber = Math.floor(Math.random() * (20 - 1 + 1) + 1)
 
-        filterActiveSquares[randomSquare].classList.add('life')
+    const filterActiveSquares = squares.filter(square => !square.classList.contains('active'))
+    //random square without class 'active'
+    const randomSquare = Math.floor(Math.random() * filterActiveSquares.length)
+    
+    //extra life square, appears only once per 60 seconds (if any)
+    if (randomNumber === 12 && !extraLifeAppeared) {
+        extraLifeAppeared = true
+        //mark the square, and as soon as it appears, add event to it
+        const lifeSquare = filterActiveSquares[randomSquare]
+        lifeSquare.classList.add('life')
+        lifeSquare.addEventListener('click', handleSquares)
 
         const clearLife = setTimeout(() => {
+            //life square is active only for 0.9 second
             filterActiveSquares.forEach(square => square.classList.remove('life'))
             clearTimeout(clearLife)
-        }, 1000);
+        }, 900);
+
+    } else if (randomNumber === 87) {
+        
     }
 }
 
@@ -102,7 +117,7 @@ const handleStart = () => {
     gameActive = true
     startButton.setAttribute('disabled', true);
     randomSquareColored()
-    extraLifeSquare()
+    utilitySquares()
     
     //add event to squares
     squares.forEach(square => square.addEventListener('click', handleSquares))
@@ -112,7 +127,7 @@ const handleStart = () => {
         //handle the time
         timer--;
         time.innerText = timer;
-        extraLifeSquare()
+        utilitySquares()
 
         if (lives === 0 || timer <= 0 || gameActive === false) {
             clearInterval(startGameInterval)
@@ -143,6 +158,7 @@ const resetGame = () => {
     time.innerText = timer;
     squares.forEach(square => square.classList.remove('active'));
     squares.forEach(square => square.classList.remove('error'));
+    squares.forEach(square => square.classList.remove('clicked'));
     startButton.removeAttribute('disabled');
     clearInterval(startGameInterval)
     clearInterval(colorRandomSquareInterval)
