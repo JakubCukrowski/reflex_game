@@ -96,13 +96,9 @@ p {
     align-items: center;
     justify-content: space-between;
     flex-wrap: wrap;
-    gap: 10px;
-    width: 540px;
-}
+    gap: 10px;}
 
 .square__button {
-    width: 80px;
-    height: 80px;
     border: 1px solid black;
     cursor: pointer;
 }

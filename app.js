@@ -15,15 +15,20 @@ const levelSpan = document.querySelector('.current__level')
 
 // game utils
 const GAME_DURATION = 60; //in seconds
-const TIME_TO_COLOR_THE_SQUARE = 3; //in seconds
-const TIME_THE_SQUARE_IS_COLORED = 2; //in seconds
-let GAME_LEVEL = 1;
-let squaresNumber = 36 // 25 for 1st lvl
-let squares = []
-let lives = 3;
-let points = 0;
-let timer = GAME_DURATION;
-let extraLifeAppeared = false
+let TIME_TO_COLOR_THE_SQUARE = 3000; //in miliseconds
+let TIME_THE_SQUARE_IS_COLORED = 2000; //in miliseconds
+
+const gameUtils = {
+    GAME_LEVEL: 1,
+    squaresNumber: 25, // 25 for 1st lvl
+    squares: [],
+    lives: 3,
+    points: 0,
+    timer: GAME_DURATION,
+    extraLifeAppeared: false,
+    gameBoardWidth: 460,
+    squareSize: 80
+}
 
 //intervals
 let startGameInterval;
@@ -32,12 +37,16 @@ let removeColorFromSquareTimeout;
 
 //set game board with appropriate number of squares depending on the current lvl
 const prepareGameBoard = () => {
-    for (let i = 0; i < squaresNumber; i++) {
+    for (let i = 0; i < gameUtils.squaresNumber; i++) {
         const squareDiv = document.createElement('div')
         squareDiv.classList.add('square__button')
-        squares.push(squareDiv)
+        squareDiv.style.height = gameUtils.squareSize + 'px'
+        squareDiv.style.width = gameUtils.squareSize + 'px'
+        gameUtils.squares.push(squareDiv)
         gameBoard.append(squareDiv)
     }
+
+    gameBoard.style.width = gameUtils.gameBoardWidth + 'px'
 }
 
 //first function call, next in startGame innterval below
@@ -47,85 +56,84 @@ prepareGameBoard()
 const handleSquares = (event) => {
     //check if square is colored
     if (event.target.classList.contains('active')) {
-        points++;
-        pointsSpan.innerText = points;
+        gameUtils.points++;
+        pointsSpan.innerText = gameUtils.points;
 
         //add clicked to check if square was clicked during 2 seconds
         event.target.classList.add('clicked');
         //prevent multiple points gathering on one colored square
-        squares.filter(square => !square.classList.contains('life'))
+        gameUtils.squares.filter(square => !square.classList.contains('life'))
             .forEach(square => square.removeEventListener('click', handleSquares));
 
     }  else if (event.target.classList.contains('life')) {
-        lives++
-        livesSpan.innerText = lives
+        gameUtils.lives++
+        livesSpan.innerText = gameUtils.lives
         event.target.classList.remove('life')
     } else  {
         //subtract life when clicked square was not colored
-        lives--
-        livesSpan.innerText = lives
+        gameUtils.lives--
+        livesSpan.innerText = gameUtils.lives
         event.target.classList.add('error')
         //block multiple wrong squares click during one interval
-        squares.filter(square => !square.classList.contains('life'))
+        gameUtils.squares.filter(square => !square.classList.contains('life'))
             .forEach(square => square.removeEventListener('click', handleSquares));
     }
 }
 
 const randomSquareColored = () => {
-    const randomSquare = Math.floor(Math.random() * (squares.length));
-    squares[randomSquare].classList.add('active');
+    const randomSquare = Math.floor(Math.random() * (gameUtils.squares.length));
+    gameUtils.squares[randomSquare].classList.add('active');
 
     //timeout to remove the color from square
     removeColorFromSquareTimeout = setTimeout(() => {
-        squares.forEach(square => square.classList.remove('active'));
+        gameUtils.squares.forEach(square => square.classList.remove('active'));
 
         //filter squares which were clicked correctly and wrong to avoid double points subtracting
-        const filterClickedSquare = squares.filter(square => square.classList.contains('clicked'))
-        const filterErrors = squares.filter(square => square.classList.contains('error'))
+        const filterClickedSquare = gameUtils.squares.filter(square => square.classList.contains('clicked'))
+        const filterErrors = gameUtils.squares.filter(square => square.classList.contains('error'))
         
         //remove point if square was not clicked and if wrong square was not clicked
         if (filterClickedSquare.length === 0 && filterErrors.length === 0) {
-            lives--
-            livesSpan.innerText = lives
+            gameUtils.lives--
+            livesSpan.innerText = gameUtils.lives
+            gameUtils.squares.forEach(square => square.removeEventListener('click', handleSquares));
         } else {
-            squares.forEach(square => square.classList.remove('clicked'));
-            squares.forEach(square => square.classList.remove('error'));
+            gameUtils.squares.forEach(square => square.classList.remove('clicked'));
+            gameUtils.squares.forEach(square => square.classList.remove('error'));
         }
 
-    }, TIME_THE_SQUARE_IS_COLORED * 1000);
-    squares.forEach(square => square.addEventListener('click', handleSquares));
+    }, TIME_THE_SQUARE_IS_COLORED);
+    gameUtils.squares.forEach(square => square.addEventListener('click', handleSquares));
 }
 
 //extra life square 
 const utilitySquares = () => {
     //random number to check the condition below and spawn extra life square
-    const randomNumber = Math.floor(Math.random() * (20 - 1 + 1) + 1)
+    const randomNumber = Math.floor(Math.random() * (20 - 1 + 1) + 1);
 
-    const filterActiveSquares = squares.filter(square => !square.classList.contains('active'))
-    //random square without class 'active'
-    const randomSquare = Math.floor(Math.random() * filterActiveSquares.length)
-    
-    //extra life square, appears only once per 60 seconds (if any)
-    if (randomNumber === 12 && !extraLifeAppeared) {
-        extraLifeAppeared = true
-        //mark the square, and as soon as it appears, add event to it
-        const lifeSquare = filterActiveSquares[randomSquare]
-        lifeSquare.classList.add('life')
+    //random square for adding life class
+    const randomSquareIndex = Math.floor(Math.random() * gameUtils.squares.length);
+
+    const lifeSquare = gameUtils.squares[randomSquareIndex];
+
+    //avoid using active square as a life square 
+    const indexOfActiveSquare = gameUtils.squares.findIndex(square => square.classList.contains('active'))
+
+    if (indexOfActiveSquare !== gameUtils.squares.indexOf(lifeSquare) && randomNumber === 12 && !gameUtils.extraLifeAppeared) {
+        lifeSquare.classList.add('life');
         lifeSquare.addEventListener('click', handleSquares)
+    }
 
         const clearLife = setTimeout(() => {
             //life square is active only for 0.9 second
-            filterActiveSquares.forEach(square => square.classList.remove('life'))
+            gameUtils.squares.forEach(square => square.classList.remove('life'))
             clearTimeout(clearLife)
         }, 900);
 
-    } else if (randomNumber === 87) {
-        
-    }
 }
 
 //handle 0 seconds left, AKA next lvl
-const gameOver = () => {
+const nextLevel = () => {
     //squares appended to game board element
     const gameBoardSquares = gameBoard.querySelectorAll('.square__button')
     
@@ -133,51 +141,60 @@ const gameOver = () => {
         gameBoard.removeChild(gameBoard.lastElementChild)
     }
 
-    squares.length = 0
-    GAME_LEVEL++;
-    levelSpan.innerText = GAME_LEVEL
-    squaresNumber += 5;
+    gameUtils.squares.length = 0;
+    gameUtils.GAME_LEVEL++;
+    levelSpan.innerText = gameUtils.GAME_LEVEL;
+    
+    if (gameUtils.GAME_LEVEL <= 5 && gameUtils.lives > 0) {
+        gameUtils.squaresNumber += 5;
+        gameUtils.gameBoardWidth += 100;
+        console.log('wykonano');
+    }
+
+    //clear both intervals
+    clearInterval(startGameInterval);
+    clearInterval(colorRandomSquareInterval);
+    clearTimeout(removeColorFromSquareTimeout);
+    //new game board
+    prepareGameBoard();
+    startButton.removeAttribute('disabled');
+    gameUtils.timer = GAME_DURATION;
+    time.innerText = gameUtils.timer;
+    gameUtils.extraLifeAppeared = false;
+    
+    if (TIME_TO_COLOR_THE_SQUARE >= 2000) {
+        TIME_THE_SQUARE_IS_COLORED -= 150
+        TIME_TO_COLOR_THE_SQUARE -= 150
+    }
+
+    console.log('executed');
 }
 
 //handle start the game
 const handleStart = () => {
-    gameActive = true
     startButton.setAttribute('disabled', true);
     randomSquareColored()
     utilitySquares()
     
     //add event to squares
-    squares.forEach(square => square.addEventListener('click', handleSquares))
+    gameUtils.squares.forEach(square => square.addEventListener('click', handleSquares))
 
     //interval to start the game
     startGameInterval = setInterval(() => {      
         //handle the time
-        timer--;
-        time.innerText = timer;
+        gameUtils.timer--;
+        time.innerText = gameUtils.timer;
         utilitySquares()
 
-        if (lives > 0 && timer <= 0) {
-            //60 seconds passed, we reset the gameactive state
-            gameActive = false
-            //clear both intervals
-            clearInterval(startGameInterval)
-            clearInterval(colorRandomSquareInterval)
-            clearTimeout(removeColorFromSquareTimeout)
-            //game ends
-            gameOver()
-            //new game board
-            prepareGameBoard()
-            startButton.removeAttribute('disabled')
-            timer = GAME_DURATION
-            time.innerText = timer
+        if (gameUtils.lives > 0 && gameUtils.timer <= 0) {
+            //execute next level function
+            nextLevel()
 
-        } else if (lives === 0 || timer <= 0) {
-            clearInterval(startGameInterval)
-            clearInterval(colorRandomSquareInterval)
-            clearTimeout(removeColorFromSquareTimeout)
+        } else if (gameUtils.lives === 0 || gameUtils.timer <= 0) {
+            //game ends
             resetGame()
-            GAME_LEVEL = 1
-            squaresNumber = 25
+            gameUtils.GAME_LEVEL = 1
+            gameUtils.squaresNumber = 25
 
         }
 
@@ -186,28 +203,28 @@ const handleStart = () => {
     //interval to light random square every TIME_TO_LIGHT_THE_SQUARE second(s)
     colorRandomSquareInterval = setInterval(() => {
         randomSquareColored()
-    }, TIME_TO_COLOR_THE_SQUARE * 1000); 
+    }, TIME_TO_COLOR_THE_SQUARE); 
 }
 
 //reset the game
 const resetGame = () => {
     //reset lives
-    lives = 3;
-    livesSpan.innerText = lives;
+    gameUtils.lives = 3;
+    livesSpan.innerText = gameUtils.lives;
     //reset points 
-    points = 0;
+    gameUtils.points = 0;
     pointsSpan.innerText = 0;
     //reset time
-    timer = GAME_DURATION;
-    time.innerText = timer;
-    squares.forEach(square => square.classList.remove('active'));
-    squares.forEach(square => square.classList.remove('error'));
-    squares.forEach(square => square.classList.remove('clicked'));
+    gameUtils.timer = GAME_DURATION;
+    time.innerText = gameUtils.timer;
+    gameUtils.squares.forEach(square => square.classList.remove('active'));
+    gameUtils.squares.forEach(square => square.classList.remove('error'));
+    gameUtils.squares.forEach(square => square.classList.remove('clicked'));
     startButton.removeAttribute('disabled');
     clearInterval(startGameInterval)
     clearInterval(colorRandomSquareInterval)
     clearTimeout(removeColorFromSquareTimeout)
-    squares.forEach(square => square.removeEventListener('click', handleSquares))
+    gameUtils.squares.forEach(square => square.removeEventListener('click', handleSquares))
 }
 
 // add start event to the button
